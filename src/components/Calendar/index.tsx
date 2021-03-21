@@ -12,6 +12,8 @@ import {
   endOfWeek,
 } from 'date-fns'
 
+import { actionRequestSchedule, useActionDispatch } from '../../store'
+
 import {
   Container,
   Header,
@@ -29,6 +31,7 @@ import {
 export const Calendar: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const dispatch = useActionDispatch()
 
   const nextMonth = useCallback(() => {
     setCurrentMonth(addMonths(currentMonth, 1))
@@ -38,9 +41,17 @@ export const Calendar: React.FC = () => {
     setCurrentMonth(subMonths(currentMonth, 1))
   }, [currentMonth])
 
-  const handleDateClick = (day: Date): void => {
-    setSelectedDate(day)
-  }
+  const handleDateClick = useCallback(
+    (day: Date) => {
+      const scheduleRequest = async (day: Date): Promise<void> => {
+        setSelectedDate(day)
+        await dispatch(actionRequestSchedule(day))
+      }
+
+      scheduleRequest(day)
+    },
+    [dispatch],
+  )
 
   const CalendarHeader = () => (
     <Header>

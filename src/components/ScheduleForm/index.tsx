@@ -1,151 +1,147 @@
-import React, { useCallback, useRef, ChangeEvent } from 'react'
+import React, { useCallback, useRef, ChangeEvent, useEffect, useState } from 'react'
 import { useHistory, Link } from 'react-router-dom'
-import { FiMail, FiLock, FiUser, FiCamera, FiArrowLeft } from 'react-icons/fi'
+import {
+  FiMail,
+  FiLock,
+  FiUser,
+  FiCamera,
+  FiArrowLeft,
+  FiPenTool,
+  FiPlusCircle,
+  FiCalendar,
+  FiCloudRain,
+} from 'react-icons/fi'
 import { FormHandles } from '@unform/core'
 import * as Yup from 'yup'
-
+import { useSelector } from 'react-redux'
 import { Form } from '@unform/web'
+import { formatISO, format } from 'date-fns'
+import { uuid } from 'uuidv4'
 
-import Input from '../../components/Input'
 import Button from '../../components/Button'
-
-//import { useToast } from '../../hooks/toast'
-
-import { Container, Content, AvatarInput } from './styles'
-
+import { useToast } from '../../hooks/toast'
 import getValidationErrors from '../../utils/getValidationErrors'
+import { selectSchedule, actionCreateNewReminder, useActionDispatch } from '../../store'
+//import { formatToLocaleDateString } from '../../utils/date'
+
+import { Container, Content, InputComponent } from './styles'
+import { ReminderProps } from '../../store/slices'
 
 interface ProfileFormData {
-  name: string
-  email: string
-  old_password: string
-  password: string
-  password_confirmation: string
+  title: string
+  description: string
+  city: string
+  datetime: Date
+  color: string
 }
 
 export const ScheduleForm: React.FC = () => {
   const formRef = useRef<FormHandles>(null)
-  //const { addToast } = useToast()
-  const history = useHistory()
+  const { addToast } = useToast()
+  //const history = useHistory()
+  const { scheduleDate, error } = useSelector(selectSchedule)
+  const dispatch = useActionDispatch()
+  //const [initialData, setInitialData] = useState<ProfileFormData>({})
+
+  useEffect(() => {
+    if (scheduleDate) {
+      formRef.current?.setData({
+        datetime: scheduleDate && format(scheduleDate, 'yyyy-MM-dd hh:mm').replace(' ', 'T'), //scheduleDate.toISOString(),
+      })
+    }
+  }, [scheduleDate])
 
   const handleSubmit = useCallback(
     async (data: ProfileFormData) => {
       try {
         formRef.current?.setErrors({})
-        // -- Criando um schema de validação. Usado quando queremos validar um objeto inteiro.
+
         const schema = Yup.object().shape({
-          name: Yup.string().required('Nome obrigatório!'),
-          email: Yup.string().required('Email obrigatório!').email('Digite um email válido!'),
-          old_password: Yup.string(),
-          password: Yup.string().when('old_password', {
-            is: (val: string | undefined) => !!val?.length,
-            then: Yup.string().required('Campo obrigatório'),
-            otherwise: Yup.string(),
-          }),
-          password_confirmation: Yup.string()
-            .when('old_password', {
-              is: (val: string | undefined) => !!val?.length,
-              then: Yup.string().required('Campo obrigatório'),
-              otherwise: Yup.string(),
-            })
-            .oneOf([Yup.ref('password'), null], 'Confirmação incorreta'),
+          title: Yup.string().required('The title is required!'),
+          description: Yup.string().required('The description is required!'),
+          city: Yup.string().required('The city is required!'),
+          datetime: Yup.date().required('The date is required!'),
+          color: Yup.string().required('The color is required!'),
         })
 
         await schema.validate(data, {
-          abortEarly: false, // -- Para retornar todos os erros que ele encontrar, não de um por um.
+          abortEarly: false,
         })
 
-        const formData = {
-          name: data.name,
-          email: data.email,
-          ...(data.old_password
-            ? {
-                old_password: data.old_password,
-                password: data.password,
-                password_confirmation: data.password_confirmation,
-              }
-            : {}),
+        const { title, description, city, color } = data
+        const reminder: ReminderProps = {
+          id: uuid(),
+          schedule: data.datetime,
+          title,
+          description,
+          city,
+          color,
         }
+        await dispatch(actionCreateNewReminder(reminder))
 
-        //const response = await api.put('/profile', formData)
-        //console.log(response)
-
-        history.push('/dashboard')
-
-        /*
-        addToast({
-          type: 'success',
-          title: 'Perfil atualizado!',
-          description: 'Suas informações foram atualizadas com sucesso.',
-        })
-        */
+        if (error) {
+          addToast({
+            type: 'error',
+            title: 'Failure',
+            description: 'Some unknown error occurred during this reminder creation.',
+          })
+        } else {
+          addToast({
+            type: 'success',
+            title: 'Reminder created',
+            description: 'One new reminder was created successfully.',
+          })
+        }
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErrors(err)
           formRef.current?.setErrors(errors)
 
+          addToast({
+            type: 'error',
+            title: 'Failure',
+            description: err.message,
+          })
+
           return
         }
-
-        /*
-        addToast({
-          type: 'error',
-          title: 'Erro na atualização!',
-          description: 'Ocorreu um erro ao atualizar o perfil. Tente novamente!',
-        })
-        */
       }
     },
-    [history],
+    [addToast, dispatch, error],
   )
-
-  const handleAvatarChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    // console.log(e.target.files && e.target.files[0]);
-    if (e.target.files) {
-      const data = new FormData()
-      data.append('avatar', e.target.files[0])
-    }
-  }, [])
 
   return (
     <Container>
-      <header>
-        <div>
-          <Link to="/dashboard">
-            <FiArrowLeft />
-          </Link>
-        </div>
-      </header>
-
       <Content>
-        <Form ref={formRef} initialData={{ name: 'teste', email: 'email' }} onSubmit={handleSubmit}>
-          <AvatarInput>
-            <label htmlFor="avatar">
-              <FiCamera />
+        <Form ref={formRef} /*initialData={initialData}*/ onSubmit={handleSubmit}>
+          <div>
+            <InputComponent name="title" icon={FiPenTool} placeholder="Title" maxLength={10} size={12} />
+            <InputComponent name="description" icon={FiPenTool} placeholder="Description" maxLength={30} size={25} />
+          </div>
 
-              <input type="file" id="avatar" onChange={handleAvatarChange} />
-            </label>
-          </AvatarInput>
+          <div>
+            <InputComponent name="city" icon={FiPlusCircle} placeholder="City" size={14} />
+            <InputComponent
+              name="datetime"
+              icon={FiCalendar}
+              placeholder="mm/dd/yyyy hh:mm"
+              maxLength={9}
+              size={13}
+              type="datetime-local"
+            />
+            <InputComponent
+              name="color"
+              icon={FiCloudRain}
+              placeholder="Color"
+              maxLength={5}
+              size={6}
+              type="color"
+              value="#fff"
+              alt="Color"
+            />
+          </div>
 
-          <h1>Meu perfil</h1>
-
-          <Input name="name" icon={FiUser} placeholder="Nome" />
-
-          <Input name="email" icon={FiMail} placeholder="E-mail" />
-
-          <Input
-            containerStyle={{ marginTop: 24 }}
-            name="old_password"
-            icon={FiLock}
-            type="password"
-            placeholder="Senha atual"
-          />
-
-          <Input name="password" icon={FiLock} type="password" placeholder="Nova senha" />
-
-          <Input name="password_confirmation" icon={FiLock} type="password" placeholder="Confirmar senha" />
-
-          <Button type="submit">Confirmar mudanças</Button>
+          <Button type="submit">Confirm Scheduler</Button>
         </Form>
       </Content>
     </Container>

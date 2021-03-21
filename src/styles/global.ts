@@ -8,6 +8,7 @@ export default createGlobalStyle`
     --border-color: #eee;
     --bg-color: #f9f9f9;
     --neutral-color: #fff;
+    --bg-color-grey: #ddd
   }
 
   * {

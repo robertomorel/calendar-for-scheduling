@@ -11,15 +11,10 @@ interface ContainerProps {
 export const Container = styled.div<ContainerProps>`
   background: #232129;
   border-radius: 10px;
-  padding: 10px;
-  width: 100%;
+  padding: 12px;
 
   display: flex;
   align-items: center;
-
-  & + div {
-    margin-top: 8px;
-  }
 
   border: 2px solid #232129;
   color: #666360;
@@ -35,15 +30,15 @@ export const Container = styled.div<ContainerProps>`
   ${props =>
     props.isFocused &&
     css`
-      border-color: #ff9000;
-      color: #ff9000;
+      border-color: var(--main-color);
+      color: var(--main-color);
     `}
 
   /* Regra para o ícone também ficar laranja caso o campo esteja preenchido. */
   ${props =>
     props.isFilled &&
     css`
-      color: #ff9000;
+      color: var(--main-color);
     `}
 
   input {
