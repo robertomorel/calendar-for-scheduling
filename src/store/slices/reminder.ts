@@ -7,18 +7,21 @@ export interface ReminderProps {
   description: string
   city: string
   color: string
+  weather?: string
 }
 
 export interface ReminderState {
   reminder: ReminderProps[] | undefined
   loading: boolean
   error: string | null
+  isUpdateWithId: string | null
 }
 
 export const reminderInitialState: ReminderState = {
   reminder: undefined,
   loading: false,
   error: null,
+  isUpdateWithId: null,
 }
 
 export const reminderSlice = createSlice({
@@ -64,6 +67,12 @@ export const reminderSlice = createSlice({
       state.loading = false
       state.error = action.payload
     },
+    actionActivateReminderUpdate: (state, action: PayloadAction<string>) => {
+      state.isUpdateWithId = action.payload
+    },
+    actionDesactivateReminderUpdate: state => {
+      state.isUpdateWithId = null
+    },
   },
 })
 
@@ -77,4 +86,6 @@ export const {
   actionDeleteAReminderFailure,
   actionDeleteAllReminderSuccess,
   actionDeleteAllReminderFailure,
+  actionActivateReminderUpdate,
+  actionDesactivateReminderUpdate,
 } = reminderSlice.actions

@@ -183,3 +183,25 @@ export const Row = styled.div`
 
   align-items: center;
 `
+
+interface ReminderMarkProps {
+  color?: string
+}
+
+export const ReminderMark = styled.div<ReminderMarkProps>`
+  margin-top: 1.6em;
+  opacity: 0.4;
+  transition: 0.5s ease-in;
+  border: 5px solid ${props => props.color};
+  background-color: green;
+  margin-right: 0.3em;
+
+  & + div {
+    margin-top: 0.3em;
+  }
+`
+
+export const ReminderMarkMultiple = styled.div`
+  display: flex;
+  justify-content: center;
+`

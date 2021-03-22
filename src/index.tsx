@@ -6,12 +6,15 @@ import App from './App'
 import GlobalStyle from './styles/global'
 import reportWebVitals from './reportWebVitals'
 import { store } from './store'
+import { ToastProvider } from './hooks/toast'
 
 ReactDOM.render(
   <React.StrictMode>
     <GlobalStyle />
     <Provider store={store}>
-      <App />
+      <ToastProvider>
+        <App />
+      </ToastProvider>
     </Provider>
   </React.StrictMode>,
   document.getElementById('root'),

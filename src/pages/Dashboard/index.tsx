@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Calendar, ScheduleForm } from '../../components'
+import { Calendar, ScheduleForm, Reminder } from '../../components'
 
 import { Container, HeaderContent, Logo, IconCalendar, Title, MainContent } from './styles'
 
@@ -9,11 +9,12 @@ export const Dashboard: React.FC = () => (
     <HeaderContent>
       <Logo>
         <IconCalendar>date_range</IconCalendar>
-        <Title>Scheduler</Title>
+        <Title data-testid="dashboard-page-title">Scheduler</Title>
       </Logo>
     </HeaderContent>
     <MainContent>
       <Calendar />
+      <Reminder />
       <ScheduleForm />
     </MainContent>
   </Container>

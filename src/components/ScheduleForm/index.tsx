@@ -1,16 +1,6 @@
 import React, { useCallback, useRef, ChangeEvent, useEffect, useState } from 'react'
 import { useHistory, Link } from 'react-router-dom'
-import {
-  FiMail,
-  FiLock,
-  FiUser,
-  FiCamera,
-  FiArrowLeft,
-  FiPenTool,
-  FiPlusCircle,
-  FiCalendar,
-  FiCloudRain,
-} from 'react-icons/fi'
+import { FiPenTool, FiPlusCircle, FiCalendar, FiCloudRain } from 'react-icons/fi'
 import { FormHandles } from '@unform/core'
 import * as Yup from 'yup'
 import { useSelector } from 'react-redux'
@@ -21,11 +11,18 @@ import { uuid } from 'uuidv4'
 import Button from '../../components/Button'
 import { useToast } from '../../hooks/toast'
 import getValidationErrors from '../../utils/getValidationErrors'
-import { selectSchedule, actionCreateNewReminder, useActionDispatch } from '../../store'
+import {
+  selectSchedule,
+  actionCreateNewReminder,
+  useActionDispatch,
+  selectReminder,
+  actionUpdateAReminder,
+} from '../../store'
 //import { formatToLocaleDateString } from '../../utils/date'
 
 import { Container, Content, InputComponent } from './styles'
-import { ReminderProps } from '../../store/slices'
+import { ReminderProps, actionDesactivateReminderUpdate } from '../../store/slices'
+import { getWeatherInfoByCity } from '../../services/weatherMapAPI'
 
 interface ProfileFormData {
   title: string
@@ -40,13 +37,32 @@ export const ScheduleForm: React.FC = () => {
   const { addToast } = useToast()
   //const history = useHistory()
   const { scheduleDate, error } = useSelector(selectSchedule)
+  const { isUpdateWithId, reminder } = useSelector(selectReminder)
   const dispatch = useActionDispatch()
   //const [initialData, setInitialData] = useState<ProfileFormData>({})
+
+  useEffect(() => {
+    //console.log('TEST: ', isUpdateWithId)
+    if (reminder && isUpdateWithId) {
+      const reminderTemp = reminder.find(r => r.id === isUpdateWithId)
+      formRef.current?.setData({
+        schedule: reminderTemp?.schedule,
+        title: reminderTemp?.title,
+        description: reminderTemp?.description,
+        city: reminderTemp?.city,
+        color: reminderTemp?.color,
+      })
+    }
+  }, [isUpdateWithId, reminder])
 
   useEffect(() => {
     if (scheduleDate) {
       formRef.current?.setData({
         datetime: scheduleDate && format(scheduleDate, 'yyyy-MM-dd hh:mm').replace(' ', 'T'), //scheduleDate.toISOString(),
+      })
+    } else {
+      formRef.current?.setData({
+        datetime: format(new Date(), 'yyyy-MM-dd hh:mm').replace(' ', 'T'),
       })
     }
   }, [scheduleDate])
@@ -68,6 +84,13 @@ export const ScheduleForm: React.FC = () => {
           abortEarly: false,
         })
 
+        let weather = null
+        try {
+          weather = await getWeatherInfoByCity(data.city)
+        } catch (err) {
+          alert('Something is wrong with the Weather Map API! Check the params again.')
+        }
+
         const { title, description, city, color } = data
         const reminder: ReminderProps = {
           id: uuid(),
@@ -76,8 +99,18 @@ export const ScheduleForm: React.FC = () => {
           description,
           city,
           color,
+          weather:
+            weather && weather.weather && weather.weather.length > 0
+              ? `${weather.weather[0].main.toUpperCase()} - ${weather.weather[0].description.toUpperCase()}`
+              : undefined,
         }
-        await dispatch(actionCreateNewReminder(reminder))
+
+        if (isUpdateWithId) {
+          await dispatch(actionUpdateAReminder(reminder))
+          await dispatch(actionDesactivateReminderUpdate())
+        } else {
+          await dispatch(actionCreateNewReminder(reminder))
+        }
 
         if (error) {
           addToast({
@@ -90,6 +123,13 @@ export const ScheduleForm: React.FC = () => {
             type: 'success',
             title: 'Reminder created',
             description: 'One new reminder was created successfully.',
+          })
+          formRef.current?.setData({
+            schedule: null,
+            title: null,
+            description: null,
+            city: null,
+            color: null,
           })
         }
       } catch (err) {
@@ -107,7 +147,7 @@ export const ScheduleForm: React.FC = () => {
         }
       }
     },
-    [addToast, dispatch, error],
+    [addToast, dispatch, error, isUpdateWithId],
   )
 
   return (
@@ -136,12 +176,13 @@ export const ScheduleForm: React.FC = () => {
               maxLength={5}
               size={6}
               type="color"
-              value="#fff"
               alt="Color"
             />
           </div>
 
-          <Button type="submit">Confirm Scheduler</Button>
+          <Button name="confirm" type="submit">
+            Confirm Scheduler
+          </Button>
         </Form>
       </Content>
     </Container>

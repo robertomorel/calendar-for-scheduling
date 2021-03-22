@@ -1,4 +1,6 @@
 import { AppThunk } from './store'
+import { differenceInCalendarDays } from 'date-fns'
+
 import {
   actionRequestScheduleStart,
   actionRequestScheduleSuccess,
@@ -68,7 +70,8 @@ export const actionUpdateAReminder = (reminderData: ReminderProps): AppThunk => 
     const newReminderList: ReminderProps[] = [...reminder]
 
     const index = newReminderList.findIndex(r => r.id === uuid)
-    newReminderList[index] = Object.assign({ ...newReminderList[index] }, { ...reminderData })
+    //newReminderList[index] = Object.assign({ ...newReminderList[index] }, { ...reminderData })
+    newReminderList[index] = { ...reminderData }
 
     await Storage.set('reminderList', JSON.stringify(newReminderList))
 
@@ -106,7 +109,7 @@ export const actionDeleteAReminder = (reminderID: string): AppThunk => async (di
   }
 }
 
-export const actionDeleteAllReminder = (): AppThunk => async (dispatch, getState) => {
+export const actionDeleteAllReminder = (datetime: Date): AppThunk => async (dispatch, getState) => {
   try {
     dispatch(actionRequestReminderStart())
 
@@ -117,9 +120,11 @@ export const actionDeleteAllReminder = (): AppThunk => async (dispatch, getState
       throw 'No reminder scheduled!'
     }
 
-    await Storage.remove('reminderList')
+    const newList = reminder.filter(r => differenceInCalendarDays(new Date(datetime), new Date(r.schedule)) !== 0)
 
-    dispatch(actionDeleteAllReminderSuccess([]))
+    await Storage.set('reminderList', JSON.stringify(newList))
+
+    dispatch(actionDeleteAllReminderSuccess(newList))
   } catch (err) {
     const reason = String(err)
     dispatch(actionDeleteAllReminderFailure(reason))

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import {
   addMonths,
   subMonths,
@@ -10,9 +10,12 @@ import {
   startOfMonth,
   endOfMonth,
   endOfWeek,
+  differenceInCalendarDays,
 } from 'date-fns'
+import { useSelector } from 'react-redux'
 
-import { actionRequestSchedule, useActionDispatch } from '../../store'
+import { actionRequestSchedule, useActionDispatch, selectReminder } from '../../store'
+import { ReminderProps } from '../../store/slices'
 
 import {
   Container,
@@ -26,12 +29,16 @@ import {
   CelBg,
   BodyRow,
   Row,
+  ReminderMark,
+  ReminderMarkMultiple,
 } from './styles'
 
 export const Calendar: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [reminders, setReminders] = useState<ReminderProps[]>()
   const dispatch = useActionDispatch()
+  const { reminder } = useSelector(selectReminder)
 
   const nextMonth = useCallback(() => {
     setCurrentMonth(addMonths(currentMonth, 1))
@@ -52,6 +59,17 @@ export const Calendar: React.FC = () => {
     },
     [dispatch],
   )
+
+  useEffect(() => {
+    if (selectedDate && reminder) {
+      let filteredList = reminder
+      if (reminder.length > 2)
+        filteredList = reminder
+          .filter(r => differenceInCalendarDays(new Date(selectedDate), new Date(r.schedule)) === 0)
+          .slice(0, 2)
+      setReminders(filteredList)
+    }
+  }, [selectedDate, reminder])
 
   const CalendarHeader = () => (
     <Header>
@@ -90,6 +108,7 @@ export const Calendar: React.FC = () => {
         const cloneDay = day
         days.push(
           <CalendarCel
+            data-testid={`calendar-${day.getDate()}-${day.getMonth()}-${day.getFullYear()}`}
             isDisabled={!isSameMonth(day, monthStart)}
             isSelected={isSameDay(day, selectedDate)}
             key={day.toDateString()}
@@ -97,6 +116,16 @@ export const Calendar: React.FC = () => {
           >
             <CelNumber>{formattedDate}</CelNumber>
             <CelBg isSelected={isSameDay(day, selectedDate)}>{formattedDate}</CelBg>
+            {isSameDay(day, selectedDate) && (
+              <>
+                {reminders &&
+                  reminders.map(r => {
+                    return <ReminderMark key={r.id} color={r.color} />
+                  })}
+
+                {reminders && reminders.length === 2 && <ReminderMarkMultiple>...</ReminderMarkMultiple>}
+              </>
+            )}
           </CalendarCel>,
         )
         day = addDays(day, 1)

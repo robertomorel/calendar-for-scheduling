@@ -10,14 +10,14 @@ interface ToastContainerProps {
 }
 
 export const ToastContainer: React.FC<ToastContainerProps> = ({ messages }) => {
-  const messagesWithTransations = useTransition(messages, (message: { id: unknown }) => message.id, {
+  const messagesWithTransations = useTransition(messages, message => message.id, {
     from: { right: '-120%', opacity: 0, transform: 'rotateZ(270deg)' },
     enter: { right: '0%', opacity: 1, transform: 'rotateZ(360deg)' },
     leave: { right: '-120%', opacity: 0, transform: 'rotateZ(270deg)' },
   })
 
   return (
-    <Container>
+    <Container data-testid="toast-container">
       {!!messagesWithTransations &&
         messagesWithTransations.map(({ item, key, props }) => <Toast key={key} style={props} message={item} />)}
     </Container>
