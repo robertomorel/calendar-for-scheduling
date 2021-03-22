@@ -1,11 +1,12 @@
-# Getting Started with Create React App
+# Getting Started with the this Calendar App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project was created using general concepts of React JS, such as **Redux**, **E2E tests**, **Unit Tests**, **Storage**, **Axios**, **Components**, **Hooks**, **Context API**, **Class Components** and **SASS**  
 
 ## Available Scripts
 
 In the project directory, you can run:
 
+### `yarn`
 ### `yarn start`
 
 Runs the app in the development mode.\
