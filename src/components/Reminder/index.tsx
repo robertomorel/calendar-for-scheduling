@@ -50,6 +50,7 @@ export const Reminder: React.FC = () => {
                 color={reminder.color}
                 datetime={reminder.schedule}
                 city={reminder.city}
+                weather={reminder.weather}
               />
             </AccordionContent>
           ))}

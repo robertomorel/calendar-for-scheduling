@@ -28,9 +28,18 @@ interface AccordionComponentProps {
   color: string
   datetime: Date
   city: string
+  weather?: string
 }
 
-const CustomAccordion: React.FC<AccordionComponentProps> = ({ uuid, title, description, color, datetime, city }) => {
+const CustomAccordion: React.FC<AccordionComponentProps> = ({
+  uuid,
+  title,
+  description,
+  color,
+  datetime,
+  city,
+  weather,
+}) => {
   const dispatch = useActionDispatch()
   const classes = useStyles()
 
@@ -71,6 +80,13 @@ const CustomAccordion: React.FC<AccordionComponentProps> = ({ uuid, title, descr
               <Signal color={color} />
               <Content>
                 <ContentLeft>
+                  {weather && (
+                    <div>
+                      <span>
+                        <b>Thats your weather for this day: {weather}</b>
+                      </span>
+                    </div>
+                  )}
                   <div>
                     <span>Date/Time: {formatToLocaleDateString(new Date(datetime))}</span>
                   </div>
