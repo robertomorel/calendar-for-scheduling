@@ -123,7 +123,7 @@ export const Calendar: React.FC = () => {
                     return <ReminderMark key={r.id} color={r.color} />
                   })}
 
-                {reminders && reminders.length === 2 && <ReminderMarkMultiple>...</ReminderMarkMultiple>}
+                {reminder && reminder.length > 2 && <ReminderMarkMultiple>...</ReminderMarkMultiple>}
               </>
             )}
           </CalendarCel>,
